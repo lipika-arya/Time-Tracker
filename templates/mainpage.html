@@ -27,7 +27,7 @@
         }
 
         h1 {
-	    color: #4CAF50;
+	    color: #04AA6D;
         }
 
         label {
@@ -59,7 +59,7 @@
 	    border: none;
 	    color: white;
 	    cursor: pointer;
-	    background-color: #4CAF50;
+	    background-color: #04AA6D;
 	    width: 100%;
 	    font-size: 16px;
         }
@@ -72,7 +72,7 @@
 	    border: none;
 	    color: white;
 	    cursor: pointer;
-	    background-color: #4CAF50;
+	    background-color: #04AA6D;
 	    width: 50%;
 	    font-size: 16px;
         }
@@ -82,10 +82,47 @@
 	    justify-content: center;
 	    align-items: center;
         }
+
+		ul {
+  		list-style-type: none;
+  		margin: 0;
+  		padding: 0;
+ 		overflow: hidden;
+  		background-color: #333;
+		}
+
+		li {
+  		float: left;
+		}
+
+		li a {
+		display: block;
+		color: white;
+		text-align: center;
+		padding: 14px 16px;
+		text-decoration: none;
+		}
+
+		li a:hover:not(.active) {
+		background-color: #111;
+		}
+
+		.active {
+		background-color: #04AA6D;
+		}
     </style>
 </head>
 
 <body>
+
+	<ul>
+		<li><a class="active" href="#reporttime">Report Time</a></li>
+		<li><a href="#hoursworked">Hours Worked</a></li>
+		<li><a href="#employees">Employees</a></li>
+		<li><a href="#logout">Logout</a></li>
+	</ul>
+
+
 	<div class="main">
 		<h1>Time Log</h1>
 		

@@ -5,6 +5,6 @@ app = Flask(__name__)
 def home():
     return render_template('login.html')
 
-@app.rout("/mainpage")
+@app.route("/mainpage")
 def mainpage():
     return render_template('mainpage.html')
