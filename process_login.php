@@ -5,7 +5,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $servername = "localhost"; // Change this to your MySQL server hostname
     $username = "your_username"; // Change this to your MySQL username
     $password = "your_password"; // Change this to your MySQL password
-    $database = "your_database"; // Change this to your MySQL database name
+    $database = "time_tracker"; // Change this to your MySQL database name
     
     $conn = new mysqli($servername, $username, $password, $database);
     
