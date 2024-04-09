@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        .btn {
+            background-color: #4caf50;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .btnback {
+            background-color: #008CBA;
+        }
+
+        .btnback:hover {
+            background-color: #005f75;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to Your Activity</h1>
+        <h2>{{ message }}</h2>
+    </div>
+
+    <form action="{{ url_for('activity', employeeId=employeeId) }}" method="post">
+        <input type="submit" name="startTime" class="btn" value="Start Shift">
+        <input type="submit" name="endTime" class="btn" value="End Shift">
+        <br>
+        <input type="submit" name="startLunchTime" class="btn" value="Start Lunch Break">
+        <input type="submit" name="endLunchTime" class="btn" value="End Lunch Break">
+        <br>
+        <input type="submit" name="startBreakTime" class="btn" value="Start Break">
+        <input type="submit" name="endBreakTime" class="btn" value="End Break">
+    </form>
+
+    <form action="{{ url_for('dashboard', employeeId=employeeId) }}" method="post">
+        <input type="submit" class="btnback" value="Back">
+    </form>
+</body>
+</html>

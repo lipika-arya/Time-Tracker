@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    div {
+      margin-top: 50px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 300px;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #272727;
+      color: #fff;
+    }
+    input[type="submit"] {
+      background-color: #4caf50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    a {
+      color: #4caf50;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div align="center">
+    <form action="{{ url_for('register') }}" method="post">
+      <div class="msg">{{ message }}</div>
+      <label for="firstName">First name:</label>
+      <input type="text" id="firstName" name="firstName" value="" /><br />
+      <label for="lastName">Last name:</label>
+      <input type="text" id="lastName" name="lastName" value="" /><br />
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" /><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <p>Already have an account? <a href="{{url_for('login')}}">Login here</a></p>
+  </div>
+</body>
+</html>
