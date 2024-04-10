@@ -16,20 +16,25 @@ def register():
             cursor = sqliteConnection.cursor()
             firstname = request.form['firstName']
             lastname = request.form['lastName']
-            password = request.form['password']  # New line to get password from form
+            password = request.form['password']
 
+            # Check password constraints
             if not firstname or not lastname or not password:
                 message = 'Please Enter First Name, Last Name, and Password'
+            elif len(password) < 8:
+                message = 'Password should be at least 8 characters long'
+            elif not re.search(r'\d', password):
+                message = 'Password should contain at least 1 number'
             else:
-                hashed_password = generate_password_hash(password)  # Hash the password
+                hashed_password = generate_password_hash(password)
                 cursor.execute(
-                    'INSERT INTO employeeInfo (firstName, lastName, password) VALUES (?, ?, ?)', (firstname, lastname, hashed_password))  # Insert password
+                    'INSERT INTO employeeInfo (firstName, lastName, password) VALUES (?, ?, ?)', (firstname, lastname, hashed_password))
                 employeeId = cursor.lastrowid
                 sqliteConnection.commit()
                 message = 'Your New Employee ID: ' + str(employeeId)
             cursor.close()
-        except:
-            sqliteConnection.rollback()
+        except sqlite3.Error as error:
+            print("Error while inserting Employee Info:", error)
             message = "Error while inserting Employee Info"
         finally:
             sqliteConnection.close()
@@ -38,30 +43,6 @@ def register():
 
 @app.route('/')
 @app.route('/login', methods=['POST', 'GET'])
-#def login():
-#    employeeExist = False
-#    message = ''
-#    try:
-#        sqliteConnection = sqlite3.connect('employee.db')
-#        cursor = sqliteConnection.cursor()
-#        if not request.form:
-#            return render_template("login.html", message=message)
-#        employeeId = request.form['employeeId']
-#        password = request.form['password'] #password
-#        cursor.execute(
-#            'SELECT EXISTS (SELECT * FROM employeeInfo WHERE employeeId=? AND password=?)', (employeeId, generate_password_hash(password)))
-#        employeeExist = cursor.fetchone()[0] == 1
-#        cursor.close()
-#    except:
-#        sqliteConnection.rollback()
-#        message = 'Error while inserting Employee Info'
-#    finally:
-#        sqliteConnection.close()
-#    if not employeeExist:
-#        message = "User doesn't exist or password is incorrect!"
-#        return render_template("login.html", message=message)
-#    return redirect(url_for("dashboard", employeeId=employeeId))
-
 def login():
     employeeExist = False
     message = ''
