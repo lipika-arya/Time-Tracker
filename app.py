@@ -16,21 +16,22 @@ def register():
             cursor = sqliteConnection.cursor()
             firstname = request.form['firstName']
             lastname = request.form['lastName']
-            password = request.form['password']  # New line to get password from form
-
-            if not firstname or not lastname or not password:
-                message = 'Please Enter First Name, Last Name, and Password'
+            password = request.form['password']
+            authorization = request.form['authorization']
+            
+            if not firstname or not lastname or not password or not authorization:
+                message = 'Please Enter First Name, Last Name, Password, and Authorization'
             else:
                 hashed_password = generate_password_hash(password)  # Hash the password
                 cursor.execute(
-                    'INSERT INTO employeeInfo (firstName, lastName, password) VALUES (?, ?, ?)', (firstname, lastname, hashed_password))  # Insert password
+                    'INSERT INTO employeeInfo (firstName, lastName, password, authorization) VALUES (?, ?, ?, ?)', (firstname, lastname, hashed_password, authorization))  # Insert password
                 employeeId = cursor.lastrowid
                 sqliteConnection.commit()
                 message = 'Your New Employee ID: ' + str(employeeId)
             cursor.close()
-        except:
+        except sqlite3.Error as e:
             sqliteConnection.rollback()
-            message = "Error while inserting Employee Info"
+            message = f"Error while inserting Employee Info: {e}"
         finally:
             sqliteConnection.close()
     return render_template("register.html", message=message)
@@ -72,28 +73,41 @@ def login():
             return render_template("login.html", message=message)
         employeeId = request.form['employeeId']
         password = request.form['password']
-        cursor.execute('SELECT password FROM employeeInfo WHERE employeeId=?', (employeeId,))
-        stored_password = cursor.fetchone()  # Fetch hashed password from the database
-        if stored_password and check_password_hash(stored_password[0], password):
-            employeeExist = True
+        cursor.execute('SELECT password, authorization FROM employeeInfo WHERE employeeId=?', (employeeId,))
+        result = cursor.fetchone()  # Fetch hashed password and authorization from the database
+        
+        if result:
+            stored_password, authorization = result
+            if check_password_hash(stored_password, password):
+                # Redirect based on the authorization level
+                if authorization.lower() == 'employee':
+                    return redirect(url_for("dashboard_employee", employeeId=employeeId))
+                elif authorization.lower() == 'employer':
+                    return redirect(url_for("dashboard_employer", employeeId=employeeId))
+                else:
+                    message = "Unauthorized access"
+            else:
+                message = "Incorrect password"
+        else:
+            message = "User does not exist"
         cursor.close()
     except sqlite3.Error as error:
-        print("Error while querying database:", error)
-        message = 'Error while querying database'
+        print("Error while querying the database:", error)
+        message = 'Error while querying the database'
     finally:
         sqliteConnection.close()
-    if not employeeExist:
-        message = "User doesn't exist or password is incorrect!"
-        return render_template("login.html", message=message)
-    return redirect(url_for("dashboard", employeeId=employeeId))
+    return render_template("login.html", message=message)
 
    
 
 
-@app.route("/dashboard/<int:employeeId>", methods=['GET', 'POST'])
-def dashboard(employeeId):
-    return render_template("dashboard.html", employeeId=employeeId)
+@app.route("/dashboard_employee/<int:employeeId>", methods=['GET', 'POST'])
+def dashboard_employee(employeeId):
+    return render_template("dashboard_employee.html", employeeId=employeeId)
 
+@app.route("/dashboard_employer/<int:employeeId>", methods=['GET', 'POST'])
+def dashboard_employer(employeeId):
+    return render_template("dashboard_employer.html", employeeId=employeeId)
 
 @app.route("/activity/<int:employeeId>", methods=['POST', 'GET'])
 def activity(employeeId):
