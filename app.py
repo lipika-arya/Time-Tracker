@@ -39,30 +39,6 @@ def register():
 
 @app.route('/')
 @app.route('/login', methods=['POST', 'GET'])
-#def login():
-#    employeeExist = False
-#    message = ''
-#    try:
-#        sqliteConnection = sqlite3.connect('employee.db')
-#        cursor = sqliteConnection.cursor()
-#        if not request.form:
-#            return render_template("login.html", message=message)
-#        employeeId = request.form['employeeId']
-#        password = request.form['password'] #password
-#        cursor.execute(
-#            'SELECT EXISTS (SELECT * FROM employeeInfo WHERE employeeId=? AND password=?)', (employeeId, generate_password_hash(password)))
-#        employeeExist = cursor.fetchone()[0] == 1
-#        cursor.close()
-#    except:
-#        sqliteConnection.rollback()
-#        message = 'Error while inserting Employee Info'
-#    finally:
-#        sqliteConnection.close()
-#    if not employeeExist:
-#        message = "User doesn't exist or password is incorrect!"
-#        return render_template("login.html", message=message)
-#    return redirect(url_for("dashboard", employeeId=employeeId))
-
 def login():
     employeeExist = False
     message = ''
@@ -74,12 +50,11 @@ def login():
         employeeId = request.form['employeeId']
         password = request.form['password']
         cursor.execute('SELECT password, authorization FROM employeeInfo WHERE employeeId=?', (employeeId,))
-        result = cursor.fetchone()  # Fetch hashed password and authorization from the database
+        result = cursor.fetchone()  
         
         if result:
             stored_password, authorization = result
             if check_password_hash(stored_password, password):
-                # Redirect based on the authorization level
                 if authorization.lower() == 'employee':
                     return redirect(url_for("dashboard_employee", employeeId=employeeId))
                 elif authorization.lower() == 'employer':
@@ -108,14 +83,13 @@ def dashboard_employee(employeeId):
 @app.route("/dashboard_employer/<int:employeeId>", methods=['GET', 'POST'])
 def dashboard_employer(employeeId):
     return render_template("dashboard_employer.html", employeeId=employeeId)
-
-@app.route("/activity/<int:employeeId>", methods=['POST', 'GET'])
-def activity(employeeId):
+@app.route("/reporttime/<int:employeeId>", methods=['POST', 'GET'])
+def reporttime(employeeId):
     d = request.form.to_dict(flat=False)
     message = ''
     activityToDo = d.keys()
     if 'startTime' in activityToDo:
-        message = startTime(1)
+        message = startTime(employeeId)
     elif 'endTime' in activityToDo:
         message = endTime(employeeId)
     elif 'startBreakTime' in activityToDo:
@@ -126,39 +100,39 @@ def activity(employeeId):
         message = startLunchTime(employeeId)
     elif 'endLunchTime' in activityToDo:
         message = endLunchTime(employeeId)
-    return render_template("activity.html", employeeId=employeeId, message=message)
+    return render_template("reporttime.html", employeeId=employeeId, message=message)
 
 
-@app.route("/data/<int:employeeId>", methods=['POST', 'GET'])
-def data(employeeId):
-    headings = ["employeeId", "Date", "Start Shift", "   End Shift",
+@app.route("/timesheet/<int:employeeId>", methods=['POST', 'GET'])
+def timesheet(employeeId):
+    headings = ["employeeId", "Date", "Start Shift", "End Shift",
                 "Break Start Time", "Break End Time", "Lunch Start Time", "Lunch End Time"]
     data = []
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
         cursor.execute(
-            'SELECT employeeId,date,startTime,endTime,startBreakTime,endBreakTime,startLunchTime,endLunchTime FROM employeeActivity WHERE employeeId= ?', (employeeId,))
-        allEmployeeInfo = cursor.fetchall()
-        data = allEmployeeInfo
-        sqliteConnection.commit()
+            'SELECT employeeId, date, startTime, endTime, startBreakTime, endBreakTime, startLunchTime, endLunchTime FROM employeeActivity WHERE employeeId= ?',
+            (employeeId,))
+        data = cursor.fetchall()
         cursor.close()
-    except:
-        sqliteConnection.rollback()
+    except sqlite3.Error as e:
+        print("Database error: {}".format(e))
+    except Exception as e:
+        print("Exception in _query: {}".format(e))
     finally:
         sqliteConnection.close()
-    return render_template("data.html", employeeId=employeeId, headings=headings, data=data)
-
+    return render_template("timesheet.html", employeeId=employeeId, headings=headings, data=data)
 
 def startTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     newShiftAllowed = "False"
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
         cursor.execute(
-            'SELECT * FROM employeeActivity WHERE employeeId= ? AND date=?', (employeeId, todayDate))
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ?', (employeeId, todayDate))
         allShifts = cursor.fetchall()
         temp = tuple(
             filter(lambda shift: shift[-1] == "False", allShifts)
@@ -166,80 +140,84 @@ def startTime(employeeId):
         update = True
         if len(temp) > 0:
             update = False
-            message = "Can't Start Shift Because of Active Shift"
+            message = "Can't start shift because of active shift"
         if update:
             cursor.execute('INSERT INTO employeeActivity (employeeId, date, startTime, newShiftAllowed) VALUES (?, ?, ?, ?)',
                            (employeeId, todayDate, time, newShiftAllowed))
             sqliteConnection.commit()
-            message = "Successfully Clocked In!"
+            message = f"Successfully clocked in! Employee ID: {employeeId}"
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Logging Your Start Shift!'
+        message = f'Error while logging start shift: {e}'
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = f'Exception while logging start shift: {e}'
     finally:
         sqliteConnection.close()
     return message
 
-
 def endTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     newShiftAllowed = "True"
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
-        cursor.execute('SELECT * FROM employeeActivity WHERE employeeId= ? AND date=? AND newShiftAllowed=?',
-                       (employeeId, todayDate, "False"))
+        cursor.execute(
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ? AND newShiftAllowed = ?',
+            (employeeId, todayDate, "False"))
         currentShift = cursor.fetchone()
-        update = True
         if currentShift is None:
-            update = False
-            message = "There is No Active Shift"
-        if update and currentShift[4] is not None and currentShift[5] is None:
-            update = False
-            message = "Can't End Shift Because Break Time is Still Active!"
-        if update and currentShift[6] is not None and currentShift[7] is None:
-            update = False
-            message = "Can't End Shift Because Lunch Time is Still Active!"
-        if update:
-            cursor.execute('UPDATE employeeActivity SET endtime = ?, newShiftAllowed = ? WHERE employeeId= ? AND date=? AND startTime=?',
-                           (time, newShiftAllowed, employeeId, todayDate, currentShift[2]))
+            message = f"There is no active shift for Employee ID: {employeeId}"
+        elif currentShift[4] is not None and currentShift[5] is None:
+            message = "Cannot end shift because break time is still active."
+        elif currentShift[6] is not None and currentShift[7] is None:
+            message = "Cannot end shift because lunch time is still active."
+        else:
+            cursor.execute(
+                'UPDATE employeeActivity SET endTime = ?, newShiftAllowed = ? WHERE employeeId = ? AND date = ? AND startTime = ?',
+                (time, newShiftAllowed, employeeId, todayDate, currentShift[2]))
             sqliteConnection.commit()
-            message = "Successfully Clocked Out"
+            message = f"Successfully clocked out for Employee ID: {employeeId}"
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Logging your End Shift!'
+        message = f"Database error while logging end shift: {e}"
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = f"Exception while logging end shift: {e}"
     finally:
         sqliteConnection.close()
     return message
 
-
 def startBreakTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
-        cursor.execute('SELECT * FROM employeeActivity WHERE employeeId= ? AND date=? AND newShiftAllowed=?',
-                       (employeeId, todayDate, "False"))
+        cursor.execute(
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ? AND newShiftAllowed = ?',
+            (employeeId, todayDate, "False"))
         currentShift = cursor.fetchone()
-        update = True
         if currentShift is None:
-            update = False
-            message = "There Is No Active Shift"
-        if update and currentShift[4] is not None:
-            update = False
-            message = "Can't take Break More than Once"
-        if update:
-            cursor.execute('UPDATE employeeActivity SET startBreakTime = ? WHERE employeeId= ? AND date=? AND startTime=?',
-                           (time, employeeId, todayDate, currentShift[2]))
+            message = "There is no active shift for Employee ID: {}".format(employeeId)
+        elif currentShift[4] is not None:
+            message = "Cannot start break more than once."
+        else:
+            cursor.execute(
+                'UPDATE employeeActivity SET startBreakTime = ? WHERE employeeId = ? AND date = ? AND startTime = ?',
+                (time, employeeId, todayDate, currentShift[2]))
             sqliteConnection.commit()
-            message = "Successfully Started A Break"
+            message = "Successfully started a break for Employee ID: {}".format(employeeId)
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Starting A Break'
+        message = "Database error while starting break: {}".format(e)
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = "Exception while starting break: {}".format(e)
     finally:
         sqliteConnection.close()
     return message
@@ -247,32 +225,33 @@ def startBreakTime(employeeId):
 
 def endBreakTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
-        cursor.execute('SELECT * FROM employeeActivity WHERE employeeId= ? AND date=? AND newShiftAllowed=?',
-                       (employeeId, todayDate, "False"))
+        cursor.execute(
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ? AND newShiftAllowed = ?',
+            (employeeId, todayDate, "False"))
         currentShift = cursor.fetchone()
-        update = True
         if currentShift is None:
-            update = False
-            message = "There is No Active Shift"
-        if update and currentShift[4] is None:
-            update = False
-            message = "Can't End Inactive Break"
-        if update and currentShift[5] is not None:
-            update = False
-            message = "Break is Already Ended"
-        if update:
-            cursor.execute('UPDATE employeeActivity SET endBreakTime = ? WHERE employeeId= ? AND date=? AND startTime=?',
-                           (time, employeeId, todayDate, currentShift[2]))
+            message = "There is no active shift for Employee ID: {}".format(employeeId)
+        elif currentShift[4] is None:
+            message = "Cannot end inactive break."
+        elif currentShift[5] is not None:
+            message = "Break is already ended."
+        else:
+            cursor.execute(
+                'UPDATE employeeActivity SET endBreakTime = ? WHERE employeeId = ? AND date = ? AND startTime = ?',
+                (time, employeeId, todayDate, currentShift[2]))
             sqliteConnection.commit()
-            message = "Successfully Ended A Break"
+            message = "Successfully ended a break for Employee ID: {}".format(employeeId)
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Ending A Break'
+        message = "Database error while ending break: {}".format(e)
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = "Exception while ending break: {}".format(e)
     finally:
         sqliteConnection.close()
     return message
@@ -280,29 +259,31 @@ def endBreakTime(employeeId):
 
 def startLunchTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
-        cursor.execute('SELECT * FROM employeeActivity WHERE employeeId= ? AND date=? AND newShiftAllowed=?',
-                       (employeeId, todayDate, "False"))
+        cursor.execute(
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ? AND newShiftAllowed = ?',
+            (employeeId, todayDate, "False"))
         currentShift = cursor.fetchone()
-        update = True
         if currentShift is None:
-            update = False
-            message = "There Is No Active Shift"
-        if update and currentShift[6] is not None:
-            update = False
-            message = "Can't take Lunch More than Once"
-        if update:
-            cursor.execute('UPDATE employeeActivity SET startLunchTime = ? WHERE employeeId= ? AND date=? AND startTime=?',
-                           (time, employeeId, todayDate, currentShift[2]))
+            message = "There is no active shift for Employee ID: {}".format(employeeId)
+        elif currentShift[6] is not None:
+            message = "Cannot start lunch more than once."
+        else:
+            cursor.execute(
+                'UPDATE employeeActivity SET startLunchTime = ? WHERE employeeId = ? AND date = ? AND startTime = ?',
+                (time, employeeId, todayDate, currentShift[2]))
             sqliteConnection.commit()
-            message = "Successfully Started A Lunch time"
+            message = "Successfully started lunch for Employee ID: {}".format(employeeId)
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Starting Lunch Break'
+        message = "Database error while starting lunch break: {}".format(e)
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = "Exception while starting lunch break: {}".format(e)
     finally:
         sqliteConnection.close()
     return message
@@ -310,32 +291,33 @@ def startLunchTime(employeeId):
 
 def endLunchTime(employeeId):
     todayDate = datetime.today().strftime("%Y-%m-%d")
-    time = datetime.now().strftime("%H:%M")
+    time = datetime.now().strftime("%H:%M:%S")
     try:
         sqliteConnection = sqlite3.connect('employee.db')
         cursor = sqliteConnection.cursor()
-        cursor.execute('SELECT * FROM employeeActivity WHERE employeeId= ? AND date=? AND newShiftAllowed=?',
-                       (employeeId, todayDate, "False"))
+        cursor.execute(
+            'SELECT * FROM employeeActivity WHERE employeeId = ? AND date = ? AND newShiftAllowed = ?',
+            (employeeId, todayDate, "False"))
         currentShift = cursor.fetchone()
-        update = True
         if currentShift is None:
-            update = False
-            message = "There Is No Active Shift"
-        if update and currentShift[6] is None:
-            update = False
-            message = "Can't End Lunch Without Starting It"
-        if update and currentShift[7] is not None:
-            update = False
-            message = "Lunch Time Already Ended "
-        if update:
-            cursor.execute('UPDATE employeeActivity SET endLunchTime = ? WHERE employeeId= ? AND date=? AND startTime=?',
-                           (time, employeeId, todayDate, currentShift[2]))
+            message = "There is no active shift for Employee ID: {}".format(employeeId)
+        elif currentShift[6] is None:
+            message = "Cannot end lunch without starting it."
+        elif currentShift[7] is not None:
+            message = "Lunch time already ended."
+        else:
+            cursor.execute(
+                'UPDATE employeeActivity SET endLunchTime = ? WHERE employeeId = ? AND date = ? AND startTime = ?',
+                (time, employeeId, todayDate, currentShift[2]))
             sqliteConnection.commit()
-            message = "Successfully Ended A Lunch time"
+            message = "Successfully ended lunch for Employee ID: {}".format(employeeId)
         cursor.close()
-    except:
+    except sqlite3.Error as e:
         sqliteConnection.rollback()
-        message = 'Error While Ending A Lunch time'
+        message = "Database error while ending lunch time: {}".format(e)
+    except Exception as e:
+        sqliteConnection.rollback()
+        message = "Exception while ending lunch time: {}".format(e)
     finally:
         sqliteConnection.close()
     return message
