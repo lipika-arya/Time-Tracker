@@ -56,6 +56,12 @@
         <form action="{{ url_for('reporttime', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn" value="Activity">
         </form>
+        <form action="{{ url_for('complete_timesheet', employeeId=employeeId) }}" method="post">
+            <input type="submit" class="btn" value="Employee Logs">
+        </form>
+        <form action="{{ url_for('employee_info', employeeId=employeeId) }}" method="post">
+            <input type="submit" class="btn" value="Employee Info">
+        </form>
         <form action="{{ url_for('login', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn logout" value="Logout">
         </form>

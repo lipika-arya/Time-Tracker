@@ -22,7 +22,7 @@ def register():
             if not firstname or not lastname or not password or not authorization:
                 message = 'Please Enter First Name, Last Name, Password, and Authorization'
             else:
-                hashed_password = generate_password_hash(password)  # Hash the password
+                hashed_password = generate_password_hash(password) 
                 cursor.execute(
                     'INSERT INTO employeeInfo (firstName, lastName, password, authorization) VALUES (?, ?, ?, ?)', (firstname, lastname, hashed_password, authorization))  # Insert password
                 employeeId = cursor.lastrowid
@@ -80,9 +80,10 @@ def login():
 def dashboard_employee(employeeId):
     return render_template("dashboard_employee.html", employeeId=employeeId)
 
-@app.route("/dashboard_employer/<int:employeeId>", methods=['GET', 'POST'])
+@app.route('/dashboard_employer/<int:employeeId>', methods=['GET', 'POST'])
 def dashboard_employer(employeeId):
     return render_template("dashboard_employer.html", employeeId=employeeId)
+
 @app.route("/reporttime/<int:employeeId>", methods=['POST', 'GET'])
 def reporttime(employeeId):
     d = request.form.to_dict(flat=False)
@@ -102,6 +103,44 @@ def reporttime(employeeId):
         message = endLunchTime(employeeId)
     return render_template("reporttime.html", employeeId=employeeId, message=message)
 
+@app.route("/complete_timesheet", methods=['POST', 'GET'])
+def complete_timesheet():
+    headings = ["employeeId", "Date", "Start Shift", "End Shift",
+                "Break Start Time", "Break End Time", "Lunch Start Time", "Lunch End Time"]
+    data = []
+    try:
+        sqliteConnection = sqlite3.connect('employee.db')
+        cursor = sqliteConnection.cursor()
+        cursor.execute(
+            'SELECT employeeId, date, startTime, endTime, startBreakTime, endBreakTime, startLunchTime, endLunchTime FROM employeeActivity')
+        data = cursor.fetchall()
+        cursor.close()
+    except sqlite3.Error as e:
+        print("Database error: {}".format(e))
+    except Exception as e:
+        print("Exception in _query: {}".format(e))
+    finally:
+        sqliteConnection.close()
+    return render_template("timesheet.html", headings=headings, data=data)
+
+@app.route("/employee_info", methods=['POST', 'GET'])
+def employee_info():
+    headings = ["employeeId", "firstname", "lastname", "authorization"]
+    data = []
+    try:
+        sqliteConnection = sqlite3.connect('employee.db')
+        cursor = sqliteConnection.cursor()
+        cursor.execute(
+            'SELECT employeeId, firstname, lastname, authorization FROM employeeInfo')
+        data = cursor.fetchall()
+        cursor.close()
+    except sqlite3.Error as e:
+        print("Database error: {}".format(e))
+    except Exception as e:
+        print("Exception in _query: {}".format(e))
+    finally:
+        sqliteConnection.close()
+    return render_template("timesheet.html", headings=headings, data=data)
 
 @app.route("/timesheet/<int:employeeId>", methods=['POST', 'GET'])
 def timesheet(employeeId):
