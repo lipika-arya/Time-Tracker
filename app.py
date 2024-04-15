@@ -6,9 +6,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
+def get_authorization(employeeId):
+    try:
+        sqliteConnection = sqlite3.connect('employee.db')
+        cursor = sqliteConnection.cursor()
+        cursor.execute('SELECT authorization FROM employeeInfo WHERE employeeId=?', (employeeId,))
+        result = cursor.fetchone()
+        if result:
+            return result[0]  # Assuming authorization is stored in the first column of the result
+        else:
+            return None  # If employeeId is not found
+    except sqlite3.Error as error:
+        print("Error while querying the database:", error)
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+        if sqliteConnection:
+            sqliteConnection.close()
+
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    
     message = ''
     if request.method == 'POST':
         try:
@@ -21,6 +41,8 @@ def register():
             
             if not firstname or not lastname or not password or not authorization:
                 message = 'Please Enter First Name, Last Name, Password, and Authorization'
+            elif len(password) < 8:
+                message = 'Password should be at least 8 characters long'
             else:
                 hashed_password = generate_password_hash(password) 
                 cursor.execute(
@@ -36,11 +58,46 @@ def register():
             sqliteConnection.close()
     return render_template("register.html", message=message)
 
+@app.route('/remove_employee/<int:employeeId>', methods=['GET', 'POST'])
+def remove_employee(employeeId):
+    message = ''
+    if request.method == 'POST':
+        try:
+            if 'employeeId' in request.form and 'password' in request.form:
+                remove_employee_id = int(request.form['employeeId'])
+                password = request.form['password']
+
+                # Ensure the logged-in employee cannot delete themselves
+                if employeeId == remove_employee_id:
+                    message = "You cannot delete yourself."
+                else:
+                    print("Form data received:", request.form)
+                    sqliteConnection = sqlite3.connect('employee.db')
+                    cursor = sqliteConnection.cursor()
+
+                    # Check if the password matches the one in the database
+                    cursor.execute("SELECT password FROM employeeInfo WHERE employeeId = ?", (employeeId,))
+                    stored_password = cursor.fetchone()[0]  # Assuming password is stored as the first column
+                
+                    if check_password_hash(stored_password, password):
+                        # If password matches, delete the employee from both tables
+                        cursor.execute("DELETE FROM employeeInfo WHERE employeeId = ?", (remove_employee_id,))
+                        cursor.execute("DELETE FROM employeeActivity WHERE employeeId = ?", (remove_employee_id,))
+                        sqliteConnection.commit()
+                        message = f"Employee with ID {remove_employee_id} removed successfully."
+                    else:
+                        message = "Incorrect password. Please try again."
+
+                    cursor.close()
+        except Exception as e:
+            print("Error:", e)
+            message = f"Error: {e}"
+
+    return render_template("remove.html", employeeId=employeeId, message=message)
 
 @app.route('/')
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    employeeExist = False
     message = ''
     try:
         sqliteConnection = sqlite3.connect('employee.db')
@@ -86,6 +143,7 @@ def dashboard_employer(employeeId):
 
 @app.route("/reporttime/<int:employeeId>", methods=['POST', 'GET'])
 def reporttime(employeeId):
+    authorization = get_authorization(employeeId)
     d = request.form.to_dict(flat=False)
     message = ''
     activityToDo = d.keys()
@@ -101,7 +159,7 @@ def reporttime(employeeId):
         message = startLunchTime(employeeId)
     elif 'endLunchTime' in activityToDo:
         message = endLunchTime(employeeId)
-    return render_template("reporttime.html", employeeId=employeeId, message=message)
+    return render_template("reporttime.html", employeeId=employeeId, authorization=authorization, message=message)
 
 @app.route("/complete_timesheet", methods=['POST', 'GET'])
 def complete_timesheet():
@@ -360,3 +418,5 @@ def endLunchTime(employeeId):
     finally:
         sqliteConnection.close()
     return message
+
+

@@ -61,8 +61,16 @@
         <input type="submit" name="endBreakTime" class="btn" value="End Break">
     </form>
 
+    {% if authorization == 'employee' %}
+    <form action="{{ url_for('dashboard_employee', employeeId=employeeId) }}" method="post">
+        <input type="submit" class="btnback" value="Back">
+    </form>
+    {% elif authorization == 'employer' %}
     <form action="{{ url_for('dashboard_employer', employeeId=employeeId) }}" method="post">
         <input type="submit" class="btnback" value="Back">
     </form>
+    {% else %}
+    <p>No authorization found.</p>
+    {% endif %}
 </body>
 </html>

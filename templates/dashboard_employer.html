@@ -62,6 +62,9 @@
         <form action="{{ url_for('employee_info', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn" value="Employee Info">
         </form>
+        <form action="{{ url_for('remove_employee', employeeId=employeeId) }}" method="post">
+            <input type="submit" class="btn" value="Remove Employee">
+        </form>
         <form action="{{ url_for('login', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn logout" value="Logout">
         </form>
