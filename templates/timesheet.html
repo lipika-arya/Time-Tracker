@@ -1,118 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity</title>
-    <style>
-        body {
-            background-color: #1a1a1a;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
+<html>
+  <style>
+    tr:nth-child(even) {
+      background-color: #e5e5e5;
+    }
+    body {
+      background-color: black;
+    }
+    .table {
+      border-spacing: 1;
+      border: thin solid blue;
+      margin: 1rem;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: white;
+    }
+    .table__header {
+      text-align: left;
+    }
 
-        .header {
-            margin-bottom: 30px;
-        }
-
-        h1, h2 {
-            margin: 0;
-        }
-
-        .btn-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 50px;
-}
-
-.btn-row {
-    display: flex;
-    justify-content: space-between;
-    width: 250px; /* Adjust the width as needed */
-    margin-bottom: 50px; /* Adjust the space between rows */
-}
-
-.btn {
-    background-color: #4caf50;
-    border: none;
-    padding: 20px; /* Adjust padding based on the desired size of the circle */
-    margin: 0;
-    cursor: pointer;
-    border-radius: 50%;
-    font-size: 16px; /* Adjust font size based on the size of the circle */
-    transition: background-color 0.3s;
-    color: white;
-    width: 150px; /* Adjust width and height to make the button circular */
-    height: 150px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-
-        .btn:hover {
-            background-color: #45a049;
-        }
-
-        .btnback {
-    background-color: #008CBA;
-    border: none;
-    padding: 20px 40px; /* Increase button size */
-    margin-top: 10px; /* Adjust vertical alignment */
-    cursor: pointer;
-    border-radius: 50px;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-        .btnback:hover {
-            background-color: #005f75;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Welcome to Your Activity</h1>
-        <h2>{{ message }}</h2>
-    </div>
-
-    <div class="btn-container">
-        <div class="btn-row">
-            <form action="{{ url_for('reporttime', employeeId=employeeId) }}" method="post">
-                <input type="submit" name="startTime" class="btn" value="Start Shift">
-                <input type="submit" name="endTime" class="btn" value="End Shift">
-            </form>
-        </div>
-    
-        <div class="btn-row">
-            <form action="{{ url_for('reporttime', employeeId=employeeId) }}" method="post">
-                <input type="submit" name="startLunchTime" class="btn" value="Start Lunch Break">
-                <input type="submit" name="endLunchTime" class="btn" value="End Lunch Break">
-            </form>
-        </div>
-    
-        <div class="btn-row">
-            <form action="{{ url_for('reporttime', employeeId=employeeId) }}" method="post">
-                <input type="submit" name="startBreakTime" class="btn" value="Start Break">
-                <input type="submit" name="endBreakTime" class="btn" value="End Break">
-            </form>
-        </div>
-    </div>
-    
-
-    {% if authorization == 'employee' %}
-    <form action="{{ url_for('dashboard_employee', employeeId=employeeId) }}" method="post">
-        <input type="submit" class="btnback" value="Back">
-    </form>
-    {% elif authorization == 'employer' %}
-    <form action="{{ url_for('dashboard_employer', employeeId=employeeId) }}" method="post">
-        <input type="submit" class="btnback" value="Back">
-    </form>
-    {% else %}
-    <p>No authorization found.</p>
-    {% endif %}
-</body>
+    .table__cell {
+      padding: 8px;
+    }
+  </style>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Information</title>
+  </head>
+  <body>
+    <table class="table">
+      <tr class="table__header">
+        {% for header in headings %}
+        <th class="table__cell">{{ header }}</th>
+        {% endfor %}
+      </tr>
+      {% for row in data %}
+      <tr class="table__row">
+        {% for cell in row %}
+        <td class="table__cell">{{ cell }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
 </html>
