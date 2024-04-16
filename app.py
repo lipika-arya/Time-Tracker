@@ -13,9 +13,9 @@ def get_authorization(employeeId):
         cursor.execute('SELECT authorization FROM employeeInfo WHERE employeeId=?', (employeeId,))
         result = cursor.fetchone()
         if result:
-            return result[0]  # Assuming authorization is stored in the first column of the result
+            return result[0]
         else:
-            return None  # If employeeId is not found
+            return None 
     except sqlite3.Error as error:
         print("Error while querying the database:", error)
         return None
@@ -67,7 +67,6 @@ def remove_employee(employeeId):
                 remove_employee_id = int(request.form['employeeId'])
                 password = request.form['password']
 
-                # Ensure the logged-in employee cannot delete themselves
                 if employeeId == remove_employee_id:
                     message = "You cannot delete yourself."
                 else:
@@ -75,12 +74,10 @@ def remove_employee(employeeId):
                     sqliteConnection = sqlite3.connect('employee.db')
                     cursor = sqliteConnection.cursor()
 
-                    # Check if the password matches the one in the database
                     cursor.execute("SELECT password FROM employeeInfo WHERE employeeId = ?", (employeeId,))
-                    stored_password = cursor.fetchone()[0]  # Assuming password is stored as the first column
+                    stored_password = cursor.fetchone()[0]  
                 
                     if check_password_hash(stored_password, password):
-                        # If password matches, delete the employee from both tables
                         cursor.execute("DELETE FROM employeeInfo WHERE employeeId = ?", (remove_employee_id,))
                         cursor.execute("DELETE FROM employeeActivity WHERE employeeId = ?", (remove_employee_id,))
                         sqliteConnection.commit()
@@ -418,5 +415,6 @@ def endLunchTime(employeeId):
     finally:
         sqliteConnection.close()
     return message
+
 
 
