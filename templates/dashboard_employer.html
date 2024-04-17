@@ -56,10 +56,10 @@
             <h1>Welcome to Employer Dashboard</h1>
         </div>
         <form action="{{ url_for('timesheet', employeeId=employeeId) }}" method="post">
-            <input type="submit" class="btn" value="My Data">
+            <input type="submit" class="btn" value="Timesheet">
         </form>
         <form action="{{ url_for('reporttime', employeeId=employeeId) }}" method="post">
-            <input type="submit" class="btn" value="Activity">
+            <input type="submit" class="btn" value="Report Time">
         </form>
         <form action="{{ url_for('complete_timesheet', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn" value="Employee Logs">
