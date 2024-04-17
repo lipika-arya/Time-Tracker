@@ -70,10 +70,12 @@
         <form action="{{ url_for('remove_employee', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn" value="Remove Employee">
         </form>
+        <form action="{{url_for('register')}}" method="get">
+            <input type="submit" class="btn" value="Add New User">
+        </form>
         <form action="{{ url_for('login', employeeId=employeeId) }}" method="post">
             <input type="submit" class="btn logout" value="Logout">
         </form>
-        <p><a href="{{url_for('register')}}">Add New User</a></p>
     </div>
 </body>
 </html>
