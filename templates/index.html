@@ -1,1 +1,61 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome to Time Tracker</title>
+  <!-- Add any CSS styles you want for the landing page -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: black; /* Set background color to black */
+      color: white; /* Set text color to white */
+      margin: 0; /* Remove default margin */
+      padding: 0; /* Remove default padding */
+    }
+    .container {
+      text-align: center;
+      
+      margin-top: 100px;
+    }
+    h1 {
+      color: white; /* Set text color to white */
+    }
+    .options {
+      display: flex;
+      justify-content: center;
+      margin-top: 50px;
+    }
+    .option {
+      margin: 0 20px;
+    }
+    .option a {
+      display: block;
+      width: 200px;
+      height: 50px;
+      background-color: #4caf50;
+      color: #fff;
+      text-decoration: none;
+      line-height: 50px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 18px;
+      transition: background-color 0.3s ease;
+    }
+    .option a:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Time Tracker</h1>
+    <div class="options">
+      <div class="option">
+        <a href="{{ url_for('login_employee') }}">Employee</a>
+      </div>
+      <div class="option">
+        <a href="{{ url_for('login_employer') }}">Employer</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

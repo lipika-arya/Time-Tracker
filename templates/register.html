@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    div {
+      margin-top: 50px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 318px;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #272727;
+      color: white;
+      appearance: none; 
+      padding-right: 30px;
+    }
+    select {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23fff" d="M5.5 7.5l4.5 4.5 4.5-4.5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px 16px;
+    }
+    input[type="submit"] {
+      background-color: #4caf50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    a {
+      color: #4caf50;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div align="center">
+    <form action="{{ url_for('register') }}" method="post">
+      <div class="msg">{{ message }}</div>
+      <label for="firstName">First name:</label>
+      <input type="text" id="firstName" name="firstName" value="" /><br />
+      <label for="lastName">Last name:</label>
+      <input type="text" id="lastName" name="lastName" value="" /><br />
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" /><br />
+      <label for="authorization">Authorization:</label>
+      <select id="authorization" name="authorization">
+        <option value="employee">Employee</option>
+        <option value="employer">Employer</option>
+      </select><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <p>Already have an account? <a href="{{url_for('index')}}">Login here</a></p>
+  </div>
+</body>
+</html>
